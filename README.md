@@ -18,7 +18,7 @@ Designed as a **flat, high-density, dark-mode institutional Web3 terminal** (zer
 8. [Ponder Event Indexer](#8-ponder-event-indexer)
 9. [Getting Started (Local Development)](#9-getting-started-local-development)
 10. [Local Foundry Anvil Fork & E2E Testing](#10-local-foundry-anvil-fork--e2e-testing)
-11. [Available Scripts & Troubleshooting](#11-available-scripts--troubleshooting)
+11. [Available Scripts](#11-available-scripts)
 
 ---
 
@@ -334,9 +334,8 @@ pnpm e2e
 
 ---
 
-## 11. Available Scripts & Troubleshooting
+## 11. Available Scripts
 
-### Package Scripts
 | Command | Purpose |
 | :--- | :--- |
 | `pnpm dev` | Start Next.js 16 dev server with Turbopack |
@@ -350,8 +349,3 @@ pnpm e2e
 | `pnpm anvil:fork` | Start local Foundry Anvil fork with Safe funding & owner impersonation |
 | `pnpm e2e:cache` | Build Synpress MetaMask wallet cache |
 | `pnpm e2e` | Run Playwright & Synpress E2E tests |
-
-### Common Troubleshooting
-- **Prisma says `Environment variable not found: DATABASE_URL`:** Prisma CLI reads `.env` (not `.env.local`). Copy `.env.local` to `.env` so both Next.js and Prisma share the same `DATABASE_URL`.
-- **Browser wallet extension does not prompt on Connect:** Ensure the extension (MetaMask / Rabby) is unlocked and permitted on `http://localhost:3000` (Extension settings → Site access), then hard-refresh (`Cmd + Shift + R`) and select **Browser Wallet** or your specific extension.
-- **SIWE `POST /api/proposals` or `/api/address-book` returns `403 Forbidden`:** By design, all off-chain metadata mutations enforce on-chain Safe ownership (`safe.isOwner(session.address)`). Connect with an owner wallet of the active Safe (or switch to a Safe you own via **Watch Custom Safe…**).
