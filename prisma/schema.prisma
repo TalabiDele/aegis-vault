@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  safes       SafeWorkspace[]
+  addressBook AddressBookEntry[]
+}
+
+model SafeWorkspace {
+  id               String           @id @default(cuid())
+  organizationId   String
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  label            String
+  address          String           // Stored as EIP-55 checksummed address
+  chainId          Int
+  isDefault        Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  proposals        ProposalMeta[]
+  spendingPolicies SpendingPolicy[]
+
+  @@unique([address, chainId])
+  @@index([organizationId])
+}
+
+model SiweNonce {
+  id        String   @id @default(cuid())
+  nonce     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model ProposalMeta {
+  id          String            @id @default(cuid())
+  safeTxHash  String            @unique
+  safeId      String
+  safe        SafeWorkspace     @relation(fields: [safeId], references: [id], onDelete: Cascade)
+  nonce       Int
+  title       String
+  description String?
+  invoiceRef  String?
+  category    String            @default("OPERATIONS") // PAYROLL | VENDOR | DEFI | GOVERNANCE | REVOKE | OPERATIONS
+  createdBy   String            // Signer checksummed address
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  comments    ProposalComment[]
+
+  @@index([safeId, nonce])
+}
+
+model ProposalComment {
+  id         String       @id @default(cuid())
+  proposalId String
+  proposal   ProposalMeta @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  author     String       // Signer checksummed address
+  body       String
+  createdAt  DateTime     @default(now())
+
+  @@index([proposalId])
+}
+
+model AddressBookEntry {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  address        String       // EIP-55 checksummed
+  chainId        Int?         // Null means valid across all EVM chains
+  label          String
+  entityType     String       @default("VENDOR") // VENDOR | SIGNER | PROTOCOL | TREASURY
+  notes          String?
+  verifiedBy     String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, address, chainId])
+}
+
+model SpendingPolicy {
+  id             String        @id @default(cuid())
+  safeId         String
+  safe           SafeWorkspace @relation(fields: [safeId], references: [id], onDelete: Cascade)
+  tokenAddress   String
+  maxSingleTxWei String        // Stored as stringified BigInt, never Float
+  requiresMemo   Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([safeId, tokenAddress])
+}
